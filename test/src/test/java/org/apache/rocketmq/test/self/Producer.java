@@ -7,6 +7,7 @@ import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.srvutil.ShutdownHookThread;
 
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
 
@@ -25,7 +26,9 @@ public class Producer {
 //                System.out.println("钩子函数执行");
 //            }
 //        }));
-        new Producer().send();
+//        new Producer().send();
+        Optional<String> optional = Optional.empty();
+        System.out.println(optional.get());
     }
 
     public void send() throws MQClientException, RemotingException, InterruptedException, MQBrokerException {
