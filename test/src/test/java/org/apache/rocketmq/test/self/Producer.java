@@ -26,21 +26,22 @@ public class Producer {
 //                System.out.println("钩子函数执行");
 //            }
 //        }));
-//        new Producer().send();
-        Optional<String> optional = Optional.empty();
-        System.out.println(optional.get());
+        new Producer().send();
     }
 
     public void send() throws MQClientException, RemotingException, InterruptedException, MQBrokerException {
         DefaultMQProducer producer = getProducer();
-        producer.createTopic("123", "test", 4);
 
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNext()) {
             String body = scanner.next();
             Message message = new Message(Const.topic, body.getBytes());
-            producer.send(message);
-            System.out.printf("已发送：%s", body);
+            try {
+                producer.send(message);
+                System.out.println("发送成功");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
