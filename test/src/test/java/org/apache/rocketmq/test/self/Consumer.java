@@ -35,24 +35,21 @@ public class Consumer {
         consumer.subscribe(Const.topic, "*");
         consumer.setConsumeFromWhere(CONSUME_FROM_LAST_OFFSET);
         consumer.setConsumeConcurrentlyMaxSpan(2000);
-        consumer.setConsumeTimeout(15);
+        consumer.setConsumeTimeout(5);
         consumer.setPullBatchSize(32);
         consumer.setConsumeMessageBatchMaxSize(1);
         consumer.setSuspendCurrentQueueTimeMillis(1000);
         consumer.setConsumeThreadMin(10);
 //        consumer.setPullThresholdForQueue(1);
-        consumer.setMaxReconsumeTimes(1);
+        consumer.setMaxReconsumeTimes(10);
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                 System.out.println("开始一次消费，消息数：" + msgs.size());
-                int i = 0;
                 for (MessageExt msg : msgs) {
-                    System.out.printf("msgId=%s, body=%s\n", msg.getMsgId(), new String(msg.getBody()));
-//                    ++i;
-//                    if (i > 2) {
-//                        return ConsumeConcurrentlyStatus.RECONSUME_LATER;
-//                    }
+                    System.out.println("msgId=" + msg.getMsgId() + "  body:" + new String(msg.getBody()));
+                    System.out.println(msg);
+//                    System.out.printf("msgId=%s, %s", msg.getMsgId(), msg);
                 }
                 return ConsumeConcurrentlyStatus.RECONSUME_LATER;
             }
