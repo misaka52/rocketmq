@@ -14,4 +14,4 @@ devenv
 localbin
 nohup.out
 mystore/
-.oracle_jre_usage/
+.oracle_jre_usage/**
