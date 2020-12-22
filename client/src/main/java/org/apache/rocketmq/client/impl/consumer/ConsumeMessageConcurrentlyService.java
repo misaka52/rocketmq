@@ -296,7 +296,7 @@ public class ConsumeMessageConcurrentlyService implements ConsumeMessageService 
                     }
                 }
 
-                // 无失败消息，延迟5s再次处理
+                // 存在失败消息，延迟5s再次处理
                 if (!msgBackFailed.isEmpty()) {
                     consumeRequest.getMsgs().removeAll(msgBackFailed);
 

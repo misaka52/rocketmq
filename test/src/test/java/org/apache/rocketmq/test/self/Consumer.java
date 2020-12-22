@@ -51,7 +51,7 @@ public class Consumer {
                     System.out.println(msg);
 //                    System.out.printf("msgId=%s, %s", msg.getMsgId(), msg);
                 }
-                return ConsumeConcurrentlyStatus.RECONSUME_LATER;
+                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
         consumer.start();
