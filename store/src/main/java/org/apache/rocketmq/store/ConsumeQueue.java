@@ -372,13 +372,17 @@ public class ConsumeQueue {
         }
     }
 
+    //获取consumeQueue最小逻辑偏移量
     public long getMinOffsetInQueue() {
         return this.minLogicOffset / CQ_STORE_UNIT_SIZE;
     }
 
+
+    //
     public void putMessagePositionInfoWrapper(DispatchRequest request) {
         final int maxRetries = 30;
         boolean canWrite = this.defaultMessageStore.getRunningFlags().isCQWriteable();
+        // 最多重试30次
         for (int i = 0; i < maxRetries && canWrite; i++) {
             long tagsCode = request.getTagsCode();
             if (isExtWriteEnable()) {
@@ -422,6 +426,7 @@ public class ConsumeQueue {
         this.defaultMessageStore.getRunningFlags().makeLogicsQueueError();
     }
 
+    // 将一条消息（条目）写入到consumeQueue文件中
     private boolean putMessagePositionInfo(final long offset, final int size, final long tagsCode,
         final long cqOffset) {
 
@@ -558,6 +563,7 @@ public class ConsumeQueue {
         return this.getMaxOffsetInQueue() - this.getMinOffsetInQueue();
     }
 
+    // 获取consumeQueue最大逻辑偏移量
     public long getMaxOffsetInQueue() {
         return this.mappedFileQueue.getMaxOffset() / CQ_STORE_UNIT_SIZE;
     }

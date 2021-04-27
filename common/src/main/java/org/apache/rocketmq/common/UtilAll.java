@@ -99,6 +99,7 @@ public class UtilAll {
         return System.currentTimeMillis() - beginTime;
     }
 
+    // 判断当前时间（小时）是否为指定小时，when可表示多个小时，用分号分割
     public static boolean isItTimeToDo(final String when) {
         String[] whiles = when.split(";");
         if (whiles.length > 0) {

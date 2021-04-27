@@ -236,7 +236,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         long cachedMessageCount = processQueue.getMsgCount().get();
         long cachedMessageSizeInMiB = processQueue.getMsgSize().get() / (1024 * 1024);
 
-        // 缓存消息数量大于拉取阙值后，触发流控，降低拉取频率
+        // 缓存消息数量大于拉取阙值后，触发流控，降低拉取频率。默认1000
         if (cachedMessageCount > this.defaultMQPushConsumer.getPullThresholdForQueue()) {
             this.executePullRequestLater(pullRequest, PULL_TIME_DELAY_MILLS_WHEN_FLOW_CONTROL);
             if ((queueFlowControlTimes++ % 1000) == 0) {
@@ -247,7 +247,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             return;
         }
 
-        // 缓存消息大小大于拉取阙值后，触发流控
+        // 缓存消息大小大于拉取阙值后，触发流控。默认100M
         if (cachedMessageSizeInMiB > this.defaultMQPushConsumer.getPullThresholdSizeForQueue()) {
             this.executePullRequestLater(pullRequest, PULL_TIME_DELAY_MILLS_WHEN_FLOW_CONTROL);
             if ((queueFlowControlTimes++ % 1000) == 0) {
@@ -260,7 +260,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
         // 非顺序消息
         if (!this.consumeOrderly) {
-            // 消息消费偏移量过大产生流控
+            // 消息消费偏移量过大产生流控，阈值默认2000
             if (processQueue.getMaxSpan() > this.defaultMQPushConsumer.getConsumeConcurrentlyMaxSpan()) {
                 this.executePullRequestLater(pullRequest, PULL_TIME_DELAY_MILLS_WHEN_FLOW_CONTROL);
                 if ((queueMaxSpanFlowControlTimes++ % 1000) == 0) {
@@ -326,13 +326,16 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                                 DefaultMQPushConsumerImpl.this.getConsumerStatsManager().incPullTPS(pullRequest.getConsumerGroup(),
                                     pullRequest.getMessageQueue().getTopic(), pullResult.getMsgFoundList().size());
 
+                                // 将消息保存到processQueue中
                                 boolean dispatchToConsume = processQueue.putMessage(pullResult.getMsgFoundList());
+                                // 构造消费请求，防止consumeMessageService线程池中
                                 DefaultMQPushConsumerImpl.this.consumeMessageService.submitConsumeRequest(
                                     pullResult.getMsgFoundList(),
                                     processQueue,
                                     pullRequest.getMessageQueue(),
                                     dispatchToConsume);
 
+                                // pullInterval，默认拉取成功后立即开启下一次拉取
                                 if (DefaultMQPushConsumerImpl.this.defaultMQPushConsumer.getPullInterval() > 0) {
                                     DefaultMQPushConsumerImpl.this.executePullRequestLater(pullRequest,
                                         DefaultMQPushConsumerImpl.this.defaultMQPushConsumer.getPullInterval());
@@ -439,6 +442,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 subscriptionData.getExpressionType(),
                 subscriptionData.getSubVersion(),
                 pullRequest.getNextOffset(),
+                // 拉取consumer指定批次大小
                 this.defaultMQPushConsumer.getPullBatchSize(),
                 sysFlag,
                 commitOffsetValue,

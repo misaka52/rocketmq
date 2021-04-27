@@ -182,6 +182,7 @@ public class ProcessQueue {
         return 0;
     }
 
+    // 移除消息，并返回内存中消息队列最小偏移量
     public long removeMessage(final List<MessageExt> msgs) {
         long result = -1;
         final long now = System.currentTimeMillis();
@@ -201,6 +202,7 @@ public class ProcessQueue {
                     }
                     msgCount.addAndGet(removedCnt);
 
+                    // 返回processQueue中最小消息偏移量
                     if (!msgTreeMap.isEmpty()) {
                         result = msgTreeMap.firstKey();
                     }

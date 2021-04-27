@@ -145,6 +145,7 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor implemen
 
         if (this.brokerController.getBrokerConfig().isStoreReplyMessageEnable()) {
             PutMessageResult putMessageResult = this.brokerController.getMessageStore().putMessage(msgInner);
+            // 处理消息结果
             this.handlePutMessageResult(putMessageResult, request, msgInner, responseHeader, sendMessageContext, queueIdInt);
         }
 

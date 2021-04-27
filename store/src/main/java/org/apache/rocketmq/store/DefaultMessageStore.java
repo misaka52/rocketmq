@@ -288,6 +288,7 @@ public class DefaultMessageStore implements MessageStore {
         this.storeStatsService.start();
 
         this.createTempFile();
+        // 添加定时任务
         this.addScheduleTask();
         this.shutdown = false;
     }
@@ -1291,7 +1292,7 @@ public class DefaultMessageStore implements MessageStore {
     }
 
     private void addScheduleTask() {
-
+        // 定时扫描待清理文件。默认每隔10s清理一次
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -1494,11 +1495,13 @@ public class DefaultMessageStore implements MessageStore {
     }
 
     public void doDispatch(DispatchRequest req) {
+        // dispatcherList包含consumeQueue和indexFile两种文件
         for (CommitLogDispatcher dispatcher : this.dispatcherList) {
             dispatcher.dispatch(req);
         }
     }
 
+    // 根据消息主题+队列id更新consumeQueue文件
     public void putMessagePositionInfo(DispatchRequest dispatchRequest) {
         ConsumeQueue cq = this.findConsumeQueue(dispatchRequest.getTopic(), dispatchRequest.getQueueId());
         cq.putMessagePositionInfoWrapper(dispatchRequest);
@@ -1592,6 +1595,7 @@ public class DefaultMessageStore implements MessageStore {
 
         private volatile int manualDeleteFileSeveralTimes = 0;
 
+        // 仅当磁盘空间不足时为true。当磁盘空间大于0.85时为true
         private volatile boolean cleanImmediately = false;
 
         public void excuteDeleteFilesManualy() {
@@ -1601,6 +1605,7 @@ public class DefaultMessageStore implements MessageStore {
 
         public void run() {
             try {
+                // 删除文件
                 this.deleteExpiredFiles();
 
                 this.redeleteHangedFile();
@@ -1615,8 +1620,11 @@ public class DefaultMessageStore implements MessageStore {
             int deletePhysicFilesInterval = DefaultMessageStore.this.getMessageStoreConfig().getDeleteCommitLogFilesInterval();
             int destroyMapedFileIntervalForcibly = DefaultMessageStore.this.getMessageStoreConfig().getDestroyMapedFileIntervalForcibly();
 
+            // 判断是否到达删除文件的时间。默认每天4点进行删除
             boolean timeup = this.isTimeToDelete();
+            // 判断磁盘空间是否爆满需要删除
             boolean spacefull = this.isSpaceToDelete();
+            // 手动删除次数。默认20次
             boolean manualDelete = this.manualDeleteFileSeveralTimes > 0;
 
             if (timeup || spacefull || manualDelete) {
@@ -1635,6 +1643,7 @@ public class DefaultMessageStore implements MessageStore {
 
                 fileReservedTime *= 60 * 60 * 1000;
 
+                // 清理过期文件
                 deleteCount = DefaultMessageStore.this.commitLog.deleteExpiredFile(fileReservedTime, deletePhysicFilesInterval,
                     destroyMapedFileIntervalForcibly, cleanAtOnce);
                 if (deleteCount > 0) {
@@ -1660,6 +1669,7 @@ public class DefaultMessageStore implements MessageStore {
             return CleanCommitLogService.class.getSimpleName();
         }
 
+        // 是否到达删除文件的时候
         private boolean isTimeToDelete() {
             String when = DefaultMessageStore.this.getMessageStoreConfig().getDeleteWhen();
             if (UtilAll.isItTimeToDo(when)) {
@@ -1670,6 +1680,7 @@ public class DefaultMessageStore implements MessageStore {
             return false;
         }
 
+        // 是否因空间不足需要删除
         private boolean isSpaceToDelete() {
             double ratio = DefaultMessageStore.this.getMessageStoreConfig().getDiskMaxUsedSpaceRatio() / 100.0;
 
@@ -1929,12 +1940,14 @@ public class DefaultMessageStore implements MessageStore {
                         this.reputFromOffset = result.getStartOffset();
 
                         for (int readSize = 0; readSize < result.getSize() && doNext; ) {
+                            // 从result中一条条读取消息
                             DispatchRequest dispatchRequest =
                                 DefaultMessageStore.this.commitLog.checkMessageAndReturnSize(result.getByteBuffer(), false, false);
                             int size = dispatchRequest.getBufferSize() == -1 ? dispatchRequest.getMsgSize() : dispatchRequest.getBufferSize();
 
                             if (dispatchRequest.isSuccess()) {
                                 if (size > 0) {
+                                    // 构建消息队列和索引文件
                                     DefaultMessageStore.this.doDispatch(dispatchRequest);
 
                                     if (BrokerRole.SLAVE != DefaultMessageStore.this.getMessageStoreConfig().getBrokerRole()

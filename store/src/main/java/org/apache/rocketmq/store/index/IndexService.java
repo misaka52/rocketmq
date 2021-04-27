@@ -163,6 +163,7 @@ public class IndexService {
         try {
             this.readWriteLock.readLock().lock();
             if (!this.indexFileList.isEmpty()) {
+                // 遍历所有的indexFile
                 for (int i = this.indexFileList.size(); i > 0; i--) {
                     IndexFile f = this.indexFileList.get(i - 1);
                     boolean lastFile = i == this.indexFileList.size();

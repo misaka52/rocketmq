@@ -74,6 +74,7 @@ public class QueryMsgByKeySubCommand implements SubCommand {
         throws MQClientException, InterruptedException {
         admin.start();
 
+        // 消息查询
         QueryResult queryResult = admin.queryMessage(topic, key, 64, 0, Long.MAX_VALUE);
         System.out.printf("%-50s %4s %40s%n",
             "#Message ID",

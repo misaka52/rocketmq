@@ -18,6 +18,7 @@ package org.apache.rocketmq.store.config;
 
 public enum BrokerRole {
     ASYNC_MASTER,
+    // 复制到master以同步模式同步到slave
     SYNC_MASTER,
     SLAVE;
 }

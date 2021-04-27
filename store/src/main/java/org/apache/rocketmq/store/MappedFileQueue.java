@@ -121,6 +121,7 @@ public class MappedFileQueue {
         this.deleteExpiredFile(willRemoveFiles);
     }
 
+    // 从mappedFiles中移除files文件列表
     void deleteExpiredFile(List<MappedFile> files) {
 
         if (!files.isEmpty()) {
@@ -333,6 +334,14 @@ public class MappedFileQueue {
         }
     }
 
+    /**
+     * 扫描CommitLog文件列表，删除已过期的文件（排除最后一个文件，仅包括已写满的文件）。从最早的开始清理，一次最多清理10个文件
+     * @param expiredTime
+     * @param deleteFilesInterval 删除一个文件后的休眠时间
+     * @param intervalForcibly
+     * @param cleanImmediately 是否立即删除。若为true则不必判断文件是否过期
+     * @return
+     */
     public int deleteExpiredFileByTime(final long expiredTime,
         final int deleteFilesInterval,
         final long intervalForcibly,
@@ -346,10 +355,13 @@ public class MappedFileQueue {
         int deleteCount = 0;
         List<MappedFile> files = new ArrayList<MappedFile>();
         if (null != mfs) {
+            // 扫描第一个至倒数第二个文件，判断文件最后更新时间+过期时间是否小于当前时间，若小于则需要进行文件，否则不清理
             for (int i = 0; i < mfsLength; i++) {
                 MappedFile mappedFile = (MappedFile) mfs[i];
+                // 计算最晚存活时间
                 long liveMaxTimestamp = mappedFile.getLastModifiedTimestamp() + expiredTime;
                 if (System.currentTimeMillis() >= liveMaxTimestamp || cleanImmediately) {
+                    // 删除commitlog文件
                     if (mappedFile.destroy(intervalForcibly)) {
                         files.add(mappedFile);
                         deleteCount++;
@@ -373,6 +385,7 @@ public class MappedFileQueue {
                 }
             }
         }
+
 
         deleteExpiredFile(files);
 

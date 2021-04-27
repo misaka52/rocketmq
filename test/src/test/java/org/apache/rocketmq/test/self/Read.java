@@ -10,13 +10,16 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.rocketmq.store.ConsumeQueue.CQ_STORE_UNIT_SIZE;
+
 /**
  * @author yuanshancheng
  * @date 2020/12/19
  */
 public class Read {
     public static void main(String[] args) throws Exception {
-        readCommitlog();
+//        readCommitlog();
+        readConsumeQueue();
     }
 
     private static void readCommitlog() throws Exception {
@@ -28,6 +31,21 @@ public class Read {
             MessageExt msgExt = MessageDecoder.decode(buffer);
             msgExtList.add(msgExt);
             System.out.println(msgExt);
+        }
+    }
+
+    private static void readConsumeQueue() throws Exception {
+        // 0 106108
+        // 3 106314
+        String path = "/Users/ysc/IdeaProjects/learning/rocketMq/rocketmq/mystore/consumequeue/SELF_TEST_TOPIC2/3/00000000000000000000";
+        ByteBuffer buffer = read(path);
+
+        List<MessageExt> msgExtList = new ArrayList<>();
+        for (int i = 0; i < 10; ++i) {
+            long offset = buffer.getLong();
+            int size = buffer.getInt();
+            long tagHashCode = buffer.getLong();
+            System.out.printf("offset=%d,size=%d,tagHashCode=%d\n", offset, size, tagHashCode);
         }
     }
 

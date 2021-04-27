@@ -48,8 +48,11 @@ import org.apache.rocketmq.store.config.StorePathConfigHelper;
 public class ScheduleMessageService extends ConfigManager {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
+    // 启动时消息队列首次执行延迟时间
     private static final long FIRST_DELAY_TIME = 1000L;
+    // 定时任务执行完成后创建新任务延迟时间
     private static final long DELAY_FOR_A_WHILE = 100L;
+    // 定时任务执行异常时，重新执行延迟时间
     private static final long DELAY_FOR_A_PERIOD = 10000L;
 
     private final ConcurrentMap<Integer /* level */, Long/* delay timeMillis */> delayLevelTable =
@@ -278,6 +281,7 @@ public class ScheduleMessageService extends ConfigManager {
                             int sizePy = bufferCQ.getByteBuffer().getInt();
                             long tagsCode = bufferCQ.getByteBuffer().getLong();
 
+                            // 计算消息投递时间
                             if (cq.isExtAddr(tagsCode)) {
                                 if (cq.getExt(tagsCode, cqExtUnit)) {
                                     tagsCode = cqExtUnit.getTagsCode();
@@ -286,11 +290,13 @@ public class ScheduleMessageService extends ConfigManager {
                                     log.error("[BUG] can't find consume queue extend file content!addr={}, offsetPy={}, sizePy={}",
                                         tagsCode, offsetPy, sizePy);
                                     long msgStoreTime = defaultMessageStore.getCommitLog().pickupStoreTimestamp(offsetPy, sizePy);
+                                    // 定时消息执行的时间戳
                                     tagsCode = computeDeliverTimestamp(delayLevel, msgStoreTime);
                                 }
                             }
 
                             long now = System.currentTimeMillis();
+                            // 计算消息投递时间
                             long deliverTimestamp = this.correctDeliverTimestamp(now, tagsCode);
 
                             nextOffset = offset + (i / ConsumeQueue.CQ_STORE_UNIT_SIZE);
@@ -332,9 +338,6 @@ public class ScheduleMessageService extends ConfigManager {
                                     } catch (Exception e) {
                                         /*
                                          * XXX: warn and notify me
-
-
-
                                          */
                                         log.error(
                                             "ScheduleMessageService, messageTimeup execute error, drop it. msgExt="

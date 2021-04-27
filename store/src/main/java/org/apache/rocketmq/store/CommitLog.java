@@ -894,6 +894,7 @@ public class CommitLog {
         storeStatsService.getSinglePutMessageTopicTimesTotal(msg.getTopic()).incrementAndGet();
         storeStatsService.getSinglePutMessageTopicSizeTotal(topic).addAndGet(result.getWroteBytes());
 
+        // 刷盘
         handleDiskFlush(result, putMessageResult, msg);
         handleHA(result, putMessageResult, msg);
 
